@@ -240,7 +240,7 @@ int main() {
     d.shuffle(10);
     Player p;
     bool quit = false;
-    while (quit == false || p.has_no_money()) {
+    while (quit == false and !p.has_no_money()) {
         p.show_money();
         int bet;
         std::cout << "How much do you want to bet? (Enter 0 if you want to quit)\n";
