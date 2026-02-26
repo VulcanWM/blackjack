@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
-#include "helpers.h"
+#include <algorithm>
+#include <random>
 
 enum class rank {
     two = 2,
@@ -107,50 +108,11 @@ public:
             }
         }
     }
-    void shuffle(int n) {
-        int total = cards.size();
-        std::vector<double> probs(total);
-        for (int i = 0; i < total; i++) {
-            probs[i] = std::sqrt(nCr(total - 1, i));
-        }
-
-        for (int iter = 0; iter < n; iter++) {
-            std::vector<int> keys(total);
-            for (int i = 0; i < total; i++) {
-                keys[i] = i;
-            }
-            int left = weighted_choice(keys, probs);
-            if (left < 0) left = 0;
-            if (left > total) left = total;
-            std::vector left_arr(cards.begin(), cards.begin() + left);
-            std::vector right_arr(cards.begin() + left, cards.end());
-
-            std::vector<Card> new_deck;
-            new_deck.reserve(total);
-
-            while (!left_arr.empty() || !right_arr.empty()) {
-                if (left_arr.empty()) {
-                    new_deck.push_back(right_arr.front());
-                    right_arr.erase(right_arr.begin());
-                    continue;
-                }
-                if (right_arr.empty()) {
-                    new_deck.push_back(left_arr.front());
-                    left_arr.erase(left_arr.begin());
-                    continue;
-                }
-                int total_remaining = left_arr.size() + right_arr.size();
-                int num = randint(1, total_remaining);
-                if (num > left_arr.size()) {
-                    new_deck.push_back(right_arr.front());
-                    right_arr.erase(right_arr.begin());
-                } else {
-                    new_deck.push_back(left_arr.front());
-                    left_arr.erase(left_arr.begin());
-                }
-            }
-            cards = new_deck;
-        }
+    void shuffle() {
+        static std::random_device rd;
+        static std::mt19937 rng(rd());
+        std::ranges::shuffle(cards, rng);
+        top_index = 0;
     }
     Card deal() {
         if (top_index >= cards.size()) {
@@ -175,7 +137,7 @@ public:
         int total = 0;
         int numberOfA = 0;
 
-        for (Card card : cards) {
+        for (const Card& card : cards){
             if (card.value() == 11) {
                 numberOfA++;
             }
@@ -193,9 +155,9 @@ public:
         cards.push_back(c);
     }
     void show_cards(std::string name) const {
-        std::cout << name + " cards are:\n";
+        std::cout << name << " cards are:\n";
         for (auto & card : cards) {
-            std::cout << card.name() + "\n";
+            std::cout << card.name() << "\n";
         }
     }
     bool is_bust() const {
@@ -214,7 +176,7 @@ public:
     }
 
     void show_first_card() const {
-        std::cout << "Dealer's first card is " + cards[0].name() + "\n";
+        std::cout << "Dealer's first card is " << cards[0].name() << "\n";
     }
 };
 
@@ -229,18 +191,18 @@ public:
     Hand hand;
 
     void show_money() const {
-        std::cout << "You have " + std::to_string(money_) + " money\n";
+        std::cout << "You have " << std::to_string(money_) << " money\n";
     }
 
     int money() const {
         return money_;
     }
 
-    int lose_money(int bet) {
+    void lose_money(int bet) {
         money_ -= bet;
     }
 
-    int gain_money(int bet) {
+    void gain_money(int bet) {
         money_ += bet;
     }
 
@@ -249,96 +211,106 @@ public:
     }
 };
 
-int main() {
+class Game {
+private:
     Deck d;
-    d.shuffle(10);
     Player p;
-    Hand dealer;
+    Player dealer;
     bool quit = false;
-    while (quit == false and !p.has_no_money()) {
-        p.show_money();
-        int bet;
-        std::cout << "How much do you want to bet? (Enter 0 if you want to quit)\n";
-        std::cin >> bet;
-        while (bet > p.money()) {
-            std::cout << "You don't have this much money!\n";
+public:
+    Game() = default;
+    void play() {
+        d.shuffle();
+        while (quit == false and !p.has_no_money()) {
+            p.show_money();
+            int bet;
             std::cout << "How much do you want to bet? (Enter 0 if you want to quit)\n";
             std::cin >> bet;
-        }
-        if (bet == 0) {
-            quit = true;
-            continue;
-        }
-        p.lose_money(bet);
-        for (int i = 0; i < 2; i++) {
-            Card user_card = d.deal();
-            p.hand.add(user_card);
-            Card dealer_card = d.deal();
-            dealer.add(dealer_card);
-        }
+            while (bet > p.money()) {
+                std::cout << "You don't have this much money!\n";
+                std::cout << "How much do you want to bet? (Enter 0 if you want to quit)\n";
+                std::cin >> bet;
+            }
+            if (bet == 0) {
+                quit = true;
+                continue;
+            }
+            p.lose_money(bet);
+            for (int i = 0; i < 2; i++) {
+                Card user_card = d.deal();
+                p.hand.add(user_card);
+                Card dealer_card = d.deal();
+                dealer.hand.add(dealer_card);
+            }
 
-        bool gameEnd = false;
-        int rounds = 0;
-        dealer.show_first_card();
-        p.hand.show_cards("Your");
+            bool gameEnd = false;
+            int rounds = 0;
+            dealer.hand.show_first_card();
+            p.hand.show_cards("Your");
 
-        if (p.hand.is_blackjack()) {
-            std::cout << "Blackjack! You won!\n";
-            p.gain_money(bet * 3);
-        } else {
-            while (gameEnd == false and !p.hand.game_ended()) {
-                std::cout << "Hit (h) or Stand (s):\n";
-                std::string option;
-                std::cin >> option;
-                while (option != "h" && option != "s") {
+            if (p.hand.is_blackjack()) {
+                std::cout << "Blackjack! You won!\n";
+                p.gain_money(bet * 5/2);
+            } else {
+                while (gameEnd == false and !p.hand.game_ended()) {
                     std::cout << "Hit (h) or Stand (s):\n";
+                    std::string option;
                     std::cin >> option;
+                    while (option != "h" && option != "s") {
+                        std::cout << "Hit (h) or Stand (s):\n";
+                        std::cin >> option;
+                    }
+                    if (option == "h") {
+                        Card c = d.deal();
+                        p.hand.add(c);
+                        p.hand.show_cards("Your");
+                    }
+                    if (option == "s") {
+                        gameEnd = true;
+                    }
+                    rounds++;
                 }
-                if (option == "h") {
-                    Card c = d.deal();
-                    p.hand.add(c);
-                    p.hand.show_cards("Your");
+                if (p.hand.is_bust()) {
+                    std::cout << "Bust! You lost!\n";
                 }
-                if (option == "s") {
-                    gameEnd = true;
-                }
-                rounds++;
-            }
-            if (p.hand.is_bust()) {
-                std::cout << "Bust! You lost!\n";
-            }
-            else {
-                while (dealer.total() < 17) {
-                    Card c = d.deal();
-                    dealer.add(c);
-                }
-                dealer.show_cards("Dealer's");
-                if (dealer.is_bust()) {
-                    std::cout << "Dealer got bust. You won!\n";
-                    p.gain_money(bet);
-                } else {
-                    if (dealer.total() > p.hand.total()) {
-                        std::cout << "Dealer got more than you. You lost!\n";
-                    } else if (dealer.total() == p.hand.total()) {
-                        std::cout << "You got the same as dealer. Draw!\n";
+                else {
+                    while (dealer.hand.total() < 17) {
+                        Card c = d.deal();
+                        dealer.hand.add(c);
+                    }
+                    dealer.hand.show_cards("Dealer's");
+                    if (dealer.hand.is_bust()) {
+                        std::cout << "Dealer got bust. You won!\n";
                         p.gain_money(bet);
                     } else {
-                        std::cout << "You got more than the dealer. You won!\n";
-                        p.gain_money(bet * 2);
+                        if (dealer.hand.total() > p.hand.total()) {
+                            std::cout << "Dealer got more than you. You lost!\n";
+                        } else if (dealer.hand.total() == p.hand.total()) {
+                            std::cout << "You got the same as dealer. Draw!\n";
+                            p.gain_money(bet);
+                        } else {
+                            std::cout << "You got more than the dealer. You won!\n";
+                            p.gain_money(bet * 2);
+                        }
                     }
                 }
             }
-        }
-        p.hand.empty_hand();
-        dealer.empty_hand();
+            p.hand.empty_hand();
+            dealer.hand.empty_hand();
 
-        d.reset();
-        d.shuffle(10);
+            d.reset();
+            d.shuffle();
+        }
+        if (p.has_no_money()) {
+            std::cout << "The game ended because you have no money!";
+        } else {
+            std::cout << "You ended the game with " << std::to_string(p.money()) << " money.";
+        }
     }
-    if (p.has_no_money()) {
-        std::cout << "The game ended because you have no money!";
-    } else {
-        std::cout << "You ended the game with " + std::to_string(p.money()) + " money.";
-    }
+};
+
+int main() {
+    Game g;
+    g.play();
     return 0;
 }
