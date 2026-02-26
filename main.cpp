@@ -231,7 +231,7 @@ public:
                 std::cout << "How much do you want to bet? (Enter 0 if you want to quit)\n";
                 std::cin >> bet;
             }
-            if (bet == 0) {
+            if (bet <= 0) {
                 quit = true;
                 continue;
             }
@@ -281,7 +281,7 @@ public:
                     dealer.hand.show_cards("Dealer's");
                     if (dealer.hand.is_bust()) {
                         std::cout << "Dealer got bust. You won!\n";
-                        p.gain_money(bet);
+                        p.gain_money(bet * 2);
                     } else {
                         if (dealer.hand.total() > p.hand.total()) {
                             std::cout << "Dealer got more than you. You lost!\n";
