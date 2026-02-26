@@ -122,10 +122,6 @@ public:
         top_index++;
         return c;
     }
-
-    void reset() {
-        top_index = 0;
-    }
 };
 
 class Hand {
@@ -183,15 +179,14 @@ public:
 class Player {
 private:
     int money_;
+    Hand hand;
 public:
     Player(int m) : money_(m) {}
 
     Player() : Player(1000) {}
 
-    Hand hand;
-
     void show_money() const {
-        std::cout << "You have " << std::to_string(money_) << " money\n";
+        std::cout << "You have " << money_ << " money\n";
     }
 
     int money() const {
@@ -208,6 +203,38 @@ public:
 
     bool has_no_money() const {
         return money_ == 0;
+    }
+
+    void add_card(Card c) {
+        hand.add(c);
+    }
+
+    void show_first_card() const {
+        hand.show_first_card();
+    }
+
+    void show_cards(const std::string &name) const {
+        hand.show_cards(name);
+    }
+
+    bool is_blackjack() const {
+        return hand.is_blackjack();
+    }
+
+    bool is_bust() const {
+        return hand.is_bust();
+    }
+
+    bool game_ended() const {
+        return hand.game_ended();
+    }
+
+    void empty_hand() {
+        hand.empty_hand();
+    }
+
+    int total() const {
+        return hand.total();
     }
 };
 
@@ -238,21 +265,20 @@ public:
             p.lose_money(bet);
             for (int i = 0; i < 2; i++) {
                 Card user_card = d.deal();
-                p.hand.add(user_card);
+                p.add_card(user_card);
                 Card dealer_card = d.deal();
-                dealer.hand.add(dealer_card);
+                dealer.add_card(dealer_card);
             }
 
             bool gameEnd = false;
-            int rounds = 0;
-            dealer.hand.show_first_card();
-            p.hand.show_cards("Your");
+            dealer.show_first_card();
+            p.show_cards("Your");
 
-            if (p.hand.is_blackjack()) {
+            if (p.is_blackjack()) {
                 std::cout << "Blackjack! You won!\n";
                 p.gain_money(bet * 5/2);
             } else {
-                while (gameEnd == false and !p.hand.game_ended()) {
+                while (gameEnd == false and !p.game_ended()) {
                     std::cout << "Hit (h) or Stand (s):\n";
                     std::string option;
                     std::cin >> option;
@@ -262,30 +288,29 @@ public:
                     }
                     if (option == "h") {
                         Card c = d.deal();
-                        p.hand.add(c);
-                        p.hand.show_cards("Your");
+                        p.add_card(c);
+                        p.show_cards("Your");
                     }
                     if (option == "s") {
                         gameEnd = true;
                     }
-                    rounds++;
                 }
-                if (p.hand.is_bust()) {
+                if (p.is_bust()) {
                     std::cout << "Bust! You lost!\n";
                 }
                 else {
-                    while (dealer.hand.total() < 17) {
+                    while (dealer.total() < 17) {
                         Card c = d.deal();
-                        dealer.hand.add(c);
+                        dealer.add_card(c);
                     }
-                    dealer.hand.show_cards("Dealer's");
-                    if (dealer.hand.is_bust()) {
+                    dealer.show_cards("Dealer's");
+                    if (dealer.is_bust()) {
                         std::cout << "Dealer got bust. You won!\n";
                         p.gain_money(bet * 2);
                     } else {
-                        if (dealer.hand.total() > p.hand.total()) {
+                        if (dealer.total() > p.total()) {
                             std::cout << "Dealer got more than you. You lost!\n";
-                        } else if (dealer.hand.total() == p.hand.total()) {
+                        } else if (dealer.total() == p.total()) {
                             std::cout << "You got the same as dealer. Draw!\n";
                             p.gain_money(bet);
                         } else {
@@ -295,16 +320,15 @@ public:
                     }
                 }
             }
-            p.hand.empty_hand();
-            dealer.hand.empty_hand();
+            p.empty_hand();
+            dealer.empty_hand();
 
-            d.reset();
             d.shuffle();
         }
         if (p.has_no_money()) {
             std::cout << "The game ended because you have no money!";
         } else {
-            std::cout << "You ended the game with " << std::to_string(p.money()) << " money.";
+            std::cout << "You ended the game with " << p.money() << " money.";
         }
     }
 };
