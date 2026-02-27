@@ -2,6 +2,8 @@
 #include <iostream>
 #include <algorithm>
 #include <random>
+#include <ios>
+#include <fstream>
 
 enum class rank {
     two = 2,
@@ -247,6 +249,7 @@ private:
 public:
     Game() = default;
     void play() {
+        clear_logs();
         d.shuffle();
         while (quit == false and !p.has_no_money()) {
             p.show_money();
@@ -277,6 +280,7 @@ public:
             if (p.is_blackjack()) {
                 std::cout << "Blackjack! You won!\n";
                 p.gain_money(bet * 5/2);
+                add_log("Blackjack! You won!");
             } else {
                 while (gameEnd == false and !p.game_ended()) {
                     std::cout << "Hit (h) or Stand (s):\n";
@@ -297,6 +301,7 @@ public:
                 }
                 if (p.is_bust()) {
                     std::cout << "Bust! You lost!\n";
+                    add_log("Bust! You lost!");
                 }
                 else {
                     while (dealer.total() < 17) {
@@ -310,11 +315,14 @@ public:
                     } else {
                         if (dealer.total() > p.total()) {
                             std::cout << "Dealer got more than you. You lost!\n";
+                            add_log("Dealer got more than you. You lost!");
                         } else if (dealer.total() == p.total()) {
                             std::cout << "You got the same as dealer. Draw!\n";
+                            add_log("You got the same as dealer. Draw!");
                             p.gain_money(bet);
                         } else {
                             std::cout << "You got more than the dealer. You won!\n";
+                            add_log("You got more than the dealer. You won!");
                             p.gain_money(bet * 2);
                         }
                     }
@@ -326,10 +334,36 @@ public:
             d.shuffle();
         }
         if (p.has_no_money()) {
-            std::cout << "The game ended because you have no money!";
+            std::cout << "The game ended because you have no money!\n";
+            add_log("The game ended because you have no money!");
         } else {
-            std::cout << "You ended the game with " << p.money() << " money.";
+            std::cout << "You ended the game with " << p.money() << " money.\n";
+            add_log("You ended the game with " + std::to_string(p.money()) + " money.");
         }
+        read_logs();
+    }
+
+    void add_log(const std::string& log_string) {
+        std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
+        log << log_string << "\n";
+    }
+
+    void read_logs() {
+        std::ifstream log("logfile.txt");
+
+        if (!log) {
+            std::cout << "no log file found.\n";
+            return;
+        }
+
+        std::string line;
+        while (std::getline(log, line)) {
+            std::cout << line << "\n";
+        }
+    }
+
+    void clear_logs() {
+        std::ofstream log("logfile.txt", std::ios::trunc);
     }
 };
 
