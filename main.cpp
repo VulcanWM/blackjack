@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <algorithm>
+#include <fstream>
 #include <random>
 // #include <ios>
 // #include <fstream>
@@ -259,38 +260,15 @@ private:
 
     int draws = 0;
 
+    int high_score = get_highscore();
+
     // save highscore to a text file
 
 public:
     Game() = default;
-    void personality_type() {
-        std::cout << "Your blackjack personality type is: ";
-        if (p.money() < 500) {
-            if (reckless_bets > (2/3 * rounds_played)) {
-                std::cout << "Reckless";
-            } else if (losses_by_lower_total >= losses_by_bust) {
-                std::cout << "Scared";
-            } else {
-                std::cout << "Overconfident";
-            }
-        } else if (p.money() > 500 && p.money() < 1500) {
-            std::cout << "Stable";
-        } else {
-            if (blackjack_wins > 2 && (blackjack_wins / rounds_played) > (2/10)) {
-                std::cout << "Lucky";
-            } else if (rounds_played < 10) {
-                std::cout << "Fluke";
-            } else {
-                if (p.money() > 5000) {
-                    std::cout << "WINNER";
-                } else {
-                    std::cout << "Winner";
-                }
-            }
-        }
-    }
-
     void play() {
+        std::cout << "Highscore: " << high_score << "\n";
+
         d.shuffle();
         while (quit == false and !p.has_no_money()) {
             p.show_money();
@@ -385,7 +363,65 @@ public:
             std::cout << "The game ended because you have no money!\n";
         } else {
             std::cout << "You ended the game with " << p.money() << " money.\n";
+            if (p.money() > high_score) {
+                std::cout << "New highscore!\n";
+                save_highscore(p.money());
+            }
         }
+    }
+
+    void personality_type() {
+        std::cout << "Your blackjack personality type is: ";
+        if (p.money() < 500) {
+            if (reckless_bets > (2/3 * rounds_played)) {
+                std::cout << "Reckless";
+            } else if (losses_by_lower_total >= losses_by_bust) {
+                std::cout << "Scared";
+            } else {
+                std::cout << "Overconfident";
+            }
+        } else if (p.money() < 1500) {
+            std::cout << "Stable";
+        } else {
+            if (blackjack_wins > 2 && (blackjack_wins / rounds_played) > (2/10)) {
+                std::cout << "Lucky";
+            } else if (rounds_played < 10) {
+                std::cout << "Fluke";
+            } else {
+                if (p.money() > 5000) {
+                    std::cout << "WINNER";
+                } else {
+                    std::cout << "Winner";
+                }
+            }
+        }
+    }
+
+    int get_highscore() {
+        std::ifstream file("highscore.txt");
+        if (!file) {
+            return 0;
+        }
+        std::string firstLine;
+        if (!std::getline(file, firstLine) || firstLine.empty()) {
+            return 0;
+        }
+        try {
+            return std::stoi(firstLine);
+        } catch (...) {
+            return 0;
+        }
+    }
+
+    void save_highscore(int score) {
+        std::ofstream file("highscore.txt");
+
+        if (!file) {
+            std::cout << "Cannot save highscore. Lack of permissions to write to fail.\n";
+            return;
+        }
+
+        file << score;
     }
 };
 
