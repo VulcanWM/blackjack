@@ -246,10 +246,54 @@ private:
     Player p;
     Player dealer;
     bool quit = false;
+
+    int rounds_played = 0;
+
+    int reckless_bets = 0;
+
+    int wins = 0;
+    int blackjack_wins = 0;
+
+    int losses_by_bust = 0;
+    int losses_by_lower_total = 0;
+
+    int draws = 0;
+
+    // save highscore to a text file
+
+    // if bj more 2 and more than 20%, lucky DONE
+    // if less than 500, and reckless bets is a lot, then reckless DONE
+    // if less than 500, stands too much, scared
+    // if less than 500, hits too much, overconfident
+    // if 500-1500, (stable) DONE
+    // > 1500 < 10 rounds (fluke) DONE
+    // > 1500 > 10 rounds (winner) DONE
 public:
     Game() = default;
+    void personality_type() {
+        std::cout << "Your blackjack personality type is: ";
+        if (p.money() < 500) {
+            if (reckless_bets > (2/3 * rounds_played)) {
+                std::cout << "Reckless";
+            } else if (losses_by_lower_total >= losses_by_bust) {
+                std::cout << "Scared";
+            } else {
+                std::cout << "Overconfident";
+            }
+        } else if (p.money() > 500 && p.money() < 1500) {
+            std::cout << "Stable";
+        } else {
+            if (blackjack_wins > 2 && (blackjack_wins / rounds_played) > (2/10)) {
+                std::cout << "Lucky";
+            } else if (rounds_played < 10) {
+                std::cout << "Fluke";
+            } else {
+                std::cout << "WINNER";
+            }
+        }
+    }
+
     void play() {
-        clear_logs();
         d.shuffle();
         while (quit == false and !p.has_no_money()) {
             p.show_money();
@@ -264,6 +308,9 @@ public:
             if (bet <= 0) {
                 quit = true;
                 continue;
+            }
+            if (bet >= 3/4 * p.money()) {
+                reckless_bets++;
             }
             p.lose_money(bet);
             for (int i = 0; i < 2; i++) {
@@ -280,7 +327,7 @@ public:
             if (p.is_blackjack()) {
                 std::cout << "Blackjack! You won!\n";
                 p.gain_money(bet * 5/2);
-                add_log("Blackjack! You won!");
+                blackjack_wins++;
             } else {
                 while (gameEnd == false and !p.game_ended()) {
                     std::cout << "Hit (h) or Stand (s):\n";
@@ -301,7 +348,7 @@ public:
                 }
                 if (p.is_bust()) {
                     std::cout << "Bust! You lost!\n";
-                    add_log("Bust! You lost!");
+                    losses_by_bust++;
                 }
                 else {
                     while (dealer.total() < 17) {
@@ -311,23 +358,25 @@ public:
                     dealer.show_cards("Dealer's");
                     if (dealer.is_bust()) {
                         std::cout << "Dealer got bust. You won!\n";
+                        wins++;
                         p.gain_money(bet * 2);
                     } else {
                         if (dealer.total() > p.total()) {
                             std::cout << "Dealer got more than you. You lost!\n";
-                            add_log("Dealer got more than you. You lost!");
+                            losses_by_lower_total++;
                         } else if (dealer.total() == p.total()) {
                             std::cout << "You got the same as dealer. Draw!\n";
-                            add_log("You got the same as dealer. Draw!");
+                            draws++;
                             p.gain_money(bet);
                         } else {
                             std::cout << "You got more than the dealer. You won!\n";
-                            add_log("You got more than the dealer. You won!");
+                            wins++;
                             p.gain_money(bet * 2);
                         }
                     }
                 }
             }
+            rounds_played++;
             p.empty_hand();
             dealer.empty_hand();
 
@@ -335,17 +384,15 @@ public:
         }
         if (p.has_no_money()) {
             std::cout << "The game ended because you have no money!\n";
-            add_log("The game ended because you have no money!");
         } else {
             std::cout << "You ended the game with " << p.money() << " money.\n";
-            add_log("You ended the game with " + std::to_string(p.money()) + " money.");
         }
-        read_logs();
     }
 };
 
 int main() {
     Game g;
     g.play();
+    g.personality_type();
     return 0;
 }
