@@ -342,29 +342,6 @@ public:
         }
         read_logs();
     }
-
-    void add_log(const std::string& log_string) {
-        std::ofstream log("logfile.txt", std::ios_base::app | std::ios_base::out);
-        log << log_string << "\n";
-    }
-
-    void read_logs() {
-        std::ifstream log("logfile.txt");
-
-        if (!log) {
-            std::cout << "no log file found.\n";
-            return;
-        }
-
-        std::string line;
-        while (std::getline(log, line)) {
-            std::cout << line << "\n";
-        }
-    }
-
-    void clear_logs() {
-        std::ofstream log("logfile.txt", std::ios::trunc);
-    }
 };
 
 int main() {
