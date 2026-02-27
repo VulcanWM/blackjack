@@ -2,8 +2,8 @@
 #include <iostream>
 #include <algorithm>
 #include <random>
-#include <ios>
-#include <fstream>
+// #include <ios>
+// #include <fstream>
 
 enum class rank {
     two = 2,
@@ -261,13 +261,6 @@ private:
 
     // save highscore to a text file
 
-    // if bj more 2 and more than 20%, lucky DONE
-    // if less than 500, and reckless bets is a lot, then reckless DONE
-    // if less than 500, stands too much, scared
-    // if less than 500, hits too much, overconfident
-    // if 500-1500, (stable) DONE
-    // > 1500 < 10 rounds (fluke) DONE
-    // > 1500 > 10 rounds (winner) DONE
 public:
     Game() = default;
     void personality_type() {
@@ -288,7 +281,11 @@ public:
             } else if (rounds_played < 10) {
                 std::cout << "Fluke";
             } else {
-                std::cout << "WINNER";
+                if (p.money() > 5000) {
+                    std::cout << "WINNER";
+                } else {
+                    std::cout << "Winner";
+                }
             }
         }
     }
@@ -330,19 +327,21 @@ public:
                 blackjack_wins++;
             } else {
                 while (gameEnd == false and !p.game_ended()) {
-                    std::cout << "Hit (h) or Stand (s):\n";
+                    std::cout << "Hit (H) or Stand (S):\n";
                     std::string option;
                     std::cin >> option;
-                    while (option != "h" && option != "s") {
-                        std::cout << "Hit (h) or Stand (s):\n";
+                    std::ranges::transform(option, option.begin(), ::toupper);
+                    while (option != "H" && option != "S") {
+                        std::cout << "Hit (H) or Stand (S):\n";
                         std::cin >> option;
+                        std::ranges::transform(option, option.begin(), ::toupper);
                     }
-                    if (option == "h") {
+                    if (option == "H") {
                         Card c = d.deal();
                         p.add_card(c);
                         p.show_cards("Your");
                     }
-                    if (option == "s") {
+                    if (option == "S") {
                         gameEnd = true;
                     }
                 }
