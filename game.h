@@ -45,7 +45,7 @@ public:
 
     void show_first_card() const;
 
-    void show_cards(const std::string &name) const;
+    void show_cards(const std::string& name) const;
 
     bool is_blackjack() const;
 
@@ -77,7 +77,7 @@ private:
 
     int draws = 0;
 
-    int high_score = get_highscore();
+    int high_score;
 
 public:
     Game();

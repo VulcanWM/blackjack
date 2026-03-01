@@ -51,7 +51,7 @@ bool Hand::game_ended() const {
 }
 
 void Hand::empty_hand() {
-    cards = {};
+    cards.clear();
 }
 
 void Hand::show_first_card() const {
@@ -90,7 +90,7 @@ void Player::show_first_card() const {
     hand.show_first_card();
 }
 
-void Player::show_cards(const std::string &name) const {
+void Player::show_cards(const std::string& name) const {
     hand.show_cards(name);
 }
 
@@ -114,7 +114,7 @@ int Player::total() const {
     return hand.total();
 }
 
-Game::Game() = default;
+Game::Game() : high_score(get_highscore()) {}
 
 void Game::play() {
     std::cout << "Highscore: " << high_score << "\n";
@@ -134,7 +134,7 @@ void Game::play() {
             quit = true;
             continue;
         }
-        if (bet >= 3/4 * p.money()) {
+        if (bet >= (3.0/4.0) * p.money()) {
             reckless_bets++;
         }
         p.lose_money(bet);
@@ -151,7 +151,7 @@ void Game::play() {
 
         if (p.is_blackjack()) {
             std::cout << "Blackjack! You won!\n";
-            p.gain_money(bet * 5/2);
+            p.gain_money(bet * (5.0/2.0));
             blackjack_wins++;
         } else {
             while (gameEnd == false and !p.game_ended()) {
@@ -178,20 +178,23 @@ void Game::play() {
                 losses_by_bust++;
             }
             else {
-                while (dealer.total() < 17) {
+                int dealer_total = dealer.total();
+                while (dealer_total < 17) {
                     Card c = d.deal();
                     dealer.add_card(c);
+                    dealer_total = dealer.total();
                 }
+
                 dealer.show_cards("Dealer's");
                 if (dealer.is_bust()) {
                     std::cout << "Dealer got bust. You won!\n";
                     wins++;
                     p.gain_money(bet * 2);
                 } else {
-                    if (dealer.total() > p.total()) {
+                    if (dealer_total > p.total()) {
                         std::cout << "Dealer got more than you. You lost!\n";
                         losses_by_lower_total++;
-                    } else if (dealer.total() == p.total()) {
+                    } else if (dealer_total == p.total()) {
                         std::cout << "You got the same as dealer. Draw!\n";
                         draws++;
                         p.gain_money(bet);
@@ -224,7 +227,7 @@ void Game::play() {
 void Game::personality_type() {
     std::cout << "Your blackjack personality type is: ";
     if (p.money() < 500) {
-        if (reckless_bets > (2/3 * rounds_played)) {
+        if (reckless_bets > ((2.0/3.0) * rounds_played)) {
             std::cout << "Reckless";
         } else if (losses_by_lower_total >= losses_by_bust) {
             std::cout << "Scared";
@@ -234,7 +237,7 @@ void Game::personality_type() {
     } else if (p.money() < 1500) {
         std::cout << "Stable";
     } else {
-        if (blackjack_wins > 2 && (blackjack_wins / rounds_played) > (2/10)) {
+        if (blackjack_wins > 2 && (blackjack_wins / rounds_played) > (2.0/10.0)) {
             std::cout << "Lucky";
         } else if (rounds_played < 10) {
             std::cout << "Fluke";
