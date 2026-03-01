@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "card_shuffling.h"
+#include "../card_shuffling.h"
 #include "helpers.h"
 
 std::vector<std::string> card_shuffle(int n) {
