@@ -25,10 +25,10 @@ std::string Card::rank_to_string() const {
 
 std::string Card::suit_to_string() const {
     switch (suit_value) {
-        case suit::diamond: return "D";
-        case suit::heart: return "H";
-        case suit::spade: return "S";
-        case suit::club: return "C";
+        case suit::diamond: return "[D]";
+        case suit::heart: return "[H]";
+        case suit::spade: return "[S]";
+        case suit::club: return "[C]";
     }
     return "?";
 }
