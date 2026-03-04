@@ -2,6 +2,7 @@
 #define BLACKJACK_GAME_H
 
 #include <string>
+#include <vector>
 #include "deck.h"
 
 class Hand {
